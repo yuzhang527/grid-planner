@@ -10,6 +10,8 @@ from .astar import count_shortest_paths, shortest_path
 
 @dataclass(frozen=True)
 class GeneratedMap:
+    # obstacle_map is indexed as obstacle_map[y][x].
+    # Coordinates exposed to the agent are Cartesian [x, y].
     obstacle_map: list[list[int]]
     start: tuple[int, int]
     goal: tuple[int, int]
@@ -24,31 +26,36 @@ def generate_map(
     require_unique_shortest_path: bool = False,
     max_tries: int = 10_000,
 ) -> GeneratedMap:
-    """Sample a reachable map with fixed obstacle count K."""
+    """Sample a reachable Cartesian grid map with fixed obstacle count K."""
     rng = random.Random(seed)
+
     start = (0, 0)
     goal = (grid_size - 1, grid_size - 1)
 
     candidate_cells = [
-        (r, c)
-        for r in range(grid_size)
-        for c in range(grid_size)
-        if (r, c) not in {start, goal}
+        (x, y)
+        for y in range(grid_size)
+        for x in range(grid_size)
+        if (x, y) not in {start, goal}
     ]
 
     for _ in range(max_tries):
         obstacles = set(rng.sample(candidate_cells, num_obstacles))
         obstacle_map = np.zeros((grid_size, grid_size), dtype=int)
-        for r, c in obstacles:
-            obstacle_map[r, c] = 1
 
-        path = shortest_path(obstacle_map.tolist(), start, goal)
+        for x, y in obstacles:
+            obstacle_map[y, x] = 1
+
+        map_list = obstacle_map.tolist()
+        path = shortest_path(map_list, start, goal)
         if path is None:
             continue
-        if require_unique_shortest_path and count_shortest_paths(obstacle_map.tolist(), start, goal) != 1:
+
+        if require_unique_shortest_path and count_shortest_paths(map_list, start, goal) != 1:
             continue
+
         return GeneratedMap(
-            obstacle_map=obstacle_map.tolist(),
+            obstacle_map=map_list,
             start=start,
             goal=goal,
             shortest_path_len=len(path) - 1,

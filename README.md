@@ -46,3 +46,19 @@ Outputs:
 
 - `outputs/logs/strategy_A_smoke/steps.jsonl`
 - `outputs/logs/strategy_A_smoke/summary.json`
+
+## Coordinate convention
+
+This project uses Cartesian grid coordinates externally.
+
+- Coordinates are `[x, y]`.
+- The origin `[0, 0]` is the bottom-left cell.
+- `x` increases to the right.
+- `y` increases upward.
+- `UP` means `y + 1`.
+- `DOWN` means `y - 1`.
+- `LEFT` means `x - 1`.
+- `RIGHT` means `x + 1`.
+- Internally, `obstacle_map` is indexed as `obstacle_map[y][x]`.
+- For human-readable display, grids are printed top-to-bottom, from `y=size-1` down to `y=0`.
+

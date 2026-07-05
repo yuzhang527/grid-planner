@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from .astar import ACTIONS, in_bounds, shortest_path
+from .astar import ACTIONS, in_bounds, is_obstacle, shortest_path
 from .feedback import adjacent_exact_feedback
 
 Coord = tuple[int, int]
@@ -11,11 +11,14 @@ Coord = tuple[int, int]
 
 @dataclass
 class GridWorldEnv:
+    # obstacle_map is indexed as obstacle_map[y][x].
+    # All public coordinates are Cartesian [x, y].
     obstacle_map: list[list[int]]
     start: Coord
     goal: Coord
     max_steps: int = 20
     feedback_type: str = "adjacent_exact"
+
     agent_pos: Coord = field(init=False)
     step_count: int = field(default=0, init=False)
     trajectory: list[dict[str, Any]] = field(default_factory=list, init=False)
@@ -32,13 +35,18 @@ class GridWorldEnv:
         self.agent_pos = self.start
         self.step_count = 0
         self.trajectory = []
+
         obs = self.get_public_obs()
-        info = {"feedback": self._feedback(), "shortest_path_len": self.shortest_path_len}
+        info = {
+            "feedback": self._feedback(),
+            "shortest_path_len": self.shortest_path_len,
+        }
         return obs, info
 
     def get_public_obs(self) -> dict:
         return {
             "grid_size": self.size,
+            "coordinate_system": "cartesian_bottom_left",
             "current_pos": [self.agent_pos[0], self.agent_pos[1]],
             "goal_pos": [self.goal[0], self.goal[1]],
             "step_count": self.step_count,
@@ -59,12 +67,13 @@ class GridWorldEnv:
             new_pos = old_pos
             invalid_reason = "unknown_action"
         else:
-            dr, dc = ACTIONS[action]
-            cand = (old_pos[0] + dr, old_pos[1] + dc)
+            dx, dy = ACTIONS[action]
+            cand = (old_pos[0] + dx, old_pos[1] + dy)
+
             if not in_bounds(cand, self.size):
                 new_pos = old_pos
                 invalid_reason = "wall"
-            elif self.obstacle_map[cand[0]][cand[1]] == 1:
+            elif is_obstacle(self.obstacle_map, cand):
                 new_pos = old_pos
                 invalid_reason = "obstacle"
             else:
@@ -72,6 +81,7 @@ class GridWorldEnv:
 
         self.agent_pos = new_pos
         self.step_count += 1
+
         done = self.agent_pos == self.goal
         truncated = self.step_count >= self.max_steps and not done
         feedback = self._feedback()
