@@ -1,0 +1,13 @@
+project_name: gridwm_strategy_A
+seed: 123
+grid_size: 5
+num_obstacles: 4
+num_episodes: 10
+max_steps: 20
+feedback_type: adjacent_exact
+require_unique_shortest_path: false
+backend: hf
+model_name: Qwen/Qwen2.5-7B-Instruct
+temperature: 0.0
+max_new_tokens: 256
+output_dir: outputs/logs/strategy_A_qwen_10
