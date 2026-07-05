@@ -4,9 +4,9 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-.venv/
-venv/
-env/
+/.venv/
+/venv/
+/env/
 
 # IDE
 .vscode/
@@ -28,3 +28,7 @@ model_cache/
 # OS
 .DS_Store
 Thumbs.db
+
+# Do not ignore source env package
+!src/env/
+!src/env/**
